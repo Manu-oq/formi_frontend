@@ -23,13 +23,20 @@ export function FormRenderer({ versionId = 3 }: FormRendererProps) {
     [data]
   );
 
-  const { fieldState, visibleFields, allFields } = useFieldState(
+  const { allFields } = useFieldState(
     sections,
     data?.config as FormConfig | undefined,
     {}
   );
 
   const methods = useFormInitialization({ sections, allFields });
+
+  const formValues = methods.watch();
+  const { fieldState, visibleFields } = useFieldState(
+    sections,
+    data?.config as FormConfig | undefined,
+    formValues
+  );
 
   const { mutation, validateForm, getSuccessMessage } = useFormSubmission({
     versionId,
@@ -39,15 +46,8 @@ export function FormRenderer({ versionId = 3 }: FormRendererProps) {
     allFields,
   });
 
-  const formValues = methods.watch();
-  const currentFieldState = useFieldState(
-    sections,
-    data?.config as FormConfig | undefined,
-    formValues
-  );
-
   const handleSubmit = methods.handleSubmit(async (formData: FieldValues) => {
-    const errors = validateForm(formData, currentFieldState.fieldState);
+    const errors = validateForm(formData, fieldState);
     if (Object.keys(errors).length > 0) {
       Object.entries(errors).forEach(([fieldId, message]) => {
         methods.setError(fieldId, { message });
@@ -57,6 +57,11 @@ export function FormRenderer({ versionId = 3 }: FormRendererProps) {
 
     const valuesPayload = Array.from(visibleFields).reduce((acc, key) => {
       acc[key] = formData[key];
+
+      if (key.startsWith("f_")) {
+        const rawKey = key.slice(2);
+        acc[rawKey] = formData[key];
+      }
       return acc;
     }, {} as Record<string, unknown>);
 
@@ -110,17 +115,17 @@ export function FormRenderer({ versionId = 3 }: FormRendererProps) {
         <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
           {sections.map((section) => (
             <SectionCard
-                key={section.id ?? section.title}
-                section={section}
-                values={formValues}
-                visibility={currentFieldState.fieldState.visibility}
-                requiredMap={currentFieldState.fieldState.required}
-                errors={methods.formState.errors}
-                onChange={(fieldId, value) =>
-                  methods.setValue(fieldId, value, { shouldValidate: true })
-                }
-                versionId={versionId}
-              />
+              key={section.id ?? section.title}
+              section={section}
+              values={formValues}
+              visibility={fieldState.visibility}
+              requiredMap={fieldState.required}
+              errors={methods.formState.errors}
+              onChange={(fieldId, value) => {
+                methods.setValue(fieldId, value, { shouldValidate: true });
+              }}
+              versionId={versionId}
+            />
           ))}
 
           {mutation.isPending && (
@@ -137,10 +142,7 @@ export function FormRenderer({ versionId = 3 }: FormRendererProps) {
             />
           )}
           {mutation.isSuccess && (
-            <FormSubmitMessage
-              type="success"
-              message={getSuccessMessage()}
-            />
+            <FormSubmitMessage type="success" message={getSuccessMessage()} />
           )}
 
           <FormActions

@@ -24,9 +24,9 @@ function evaluateCondition(
 
   switch (condition.operator) {
     case "equals":
-      return left === right;
+      return left == right;
     case "not_equals":
-      return left !== right;
+      return left != right;
     case "greater_than":
       return Number(left) > Number(right);
     case "less_than":
@@ -53,15 +53,27 @@ function deriveFieldState(
 
   const rules = (config?.conditional_logic ?? []) as ConditionalRule[];
 
+  const showControlledFields = new Set<string>();
+  rules.forEach((rule) => {
+    rule.actions?.forEach((action) => {
+      if (action.type === "show_field") {
+        showControlledFields.add(action.target_field);
+      }
+    });
+  });
+
+  showControlledFields.forEach((fieldId) => {
+    visibility[fieldId] = false;
+  });
+
   rules.forEach((rule) => {
     const matches = evaluateCondition(rule.conditions, values);
 
     rule.actions?.forEach((action) => {
       if (action.type === "show_field") {
-        if (visibility[action.target_field] === undefined) {
-          visibility[action.target_field] = false;
+        if (matches) {
+          visibility[action.target_field] = true;
         }
-        visibility[action.target_field] = matches;
       }
 
       if (action.type === "hide_field") {
@@ -71,10 +83,11 @@ function deriveFieldState(
       }
 
       if (action.type === "set_required") {
-        const base = baseRequired[action.target_field] ?? false;
         const requiredValue =
           action.value === undefined ? true : Boolean(action.value);
-        required[action.target_field] = matches ? requiredValue : base;
+        if (matches) {
+          required[action.target_field] = requiredValue;
+        }
       }
     });
   });
