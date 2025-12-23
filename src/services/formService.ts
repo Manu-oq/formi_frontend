@@ -1,7 +1,6 @@
 import type { FormVersion } from "../types/form";
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL";
-
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export type UploadResponse = {
   file_id: number;
@@ -18,13 +17,16 @@ export async function uploadFile(
   formData.append("field_id", fieldId);
   formData.append("file", file);
 
-  const response = await fetch(`${API_BASE_URL}/form-versions/${versionId}/uploads`, {
-    method: "POST",
-    headers: {
-      Accept: "application/json",
-    },
-    body: formData,
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/form-versions/${versionId}/uploads`,
+    {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+      },
+      body: formData,
+    }
+  );
 
   if (!response.ok) {
     let errorMessage = "Error al subir el archivo";
@@ -32,8 +34,7 @@ export async function uploadFile(
       const errorData = await response.json();
       if (errorData.message) errorMessage = errorData.message;
       if (errorData.errors?.file) errorMessage = errorData.errors.file[0];
-    } catch (e) {
-    }
+    } catch (e) {}
     throw new Error(errorMessage);
   }
 
@@ -66,21 +67,24 @@ export async function submitForm(
   payload: Record<string, unknown>,
   userId?: number | string | null
 ): Promise<any> {
-  const response = await fetch(`${API_BASE_URL}/form-versions/${versionId}/submissions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify({
-      payload,
-      user_id: userId ?? null,
-    }),
-  });
+  const response = await fetch(
+    `${API_BASE_URL}/form-versions/${versionId}/submissions`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        payload,
+        user_id: userId ?? null,
+      }),
+    }
+  );
 
   if (!response.ok) {
     const errorData = await response.json();
-    throw errorData; 
+    throw errorData;
   }
 
   return await response.json();
