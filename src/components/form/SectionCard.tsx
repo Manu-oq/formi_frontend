@@ -8,7 +8,7 @@ type SectionCardProps = {
   requiredMap: Record<string, boolean>;
   errors: Record<string, { message?: string } | undefined>;
   onChange: (fieldId: string, value: unknown) => void;
-  versionId: string | number; 
+  versionId: string | number;
 };
 
 export function SectionCard({
@@ -18,6 +18,7 @@ export function SectionCard({
   requiredMap,
   errors,
   onChange,
+  versionId,
 }: SectionCardProps) {
   const visibleFields = section.fields.filter(
     (field) => visibility[field.id] !== false
@@ -61,7 +62,7 @@ export function SectionCard({
               required={requiredMap[field.id]}
               error={errors[field.id]?.message}
               onChange={onChange}
-              versionId={versionId} 
+              versionId={versionId}
             />
           </div>
         ))}
