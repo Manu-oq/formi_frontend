@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-
-import { FormVersion } from "../types/form";
+import type { FormVersion } from "../types/form";
 
 export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? "http://localhost/api";
@@ -34,8 +33,11 @@ export function useFormSchema(versionId: number | string | null) {
           throw new Error(`Request failed with status ${response.status}`);
         }
 
-        const json = (await response.json()) as { data?: unknown } | FormVersion;
-        const version = (json as { data?: FormVersion }).data ?? (json as FormVersion);
+        const json = (await response.json()) as
+          | { data?: unknown }
+          | FormVersion;
+        const version =
+          (json as { data?: FormVersion }).data ?? (json as FormVersion);
         setData(version ?? null);
       } catch (err) {
         if ((err as DOMException).name === "AbortError") return;
